@@ -51,8 +51,33 @@ Applied with `sudo netplan apply`.
 
 ## wazuh (Wazuh manager + Zeek in Docker)
 - Ubuntu Server 22.04, RAM 8 GB, 4 CPUs, 50 GB disk
-- Lab IP on enp0s8: 192.168.56.5 (static in netplan)
-- Status: in progress (Mac-to-VM ping not working yet)
+- Lab IP on enp0s8: 192.168.56.5 (static), reachable by SSH from the Mac
+
+### Network configuration
+/etc/netplan/50-cloud-init.yaml:
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    enp0s8:
+      dhcp4: false
+      addresses: [192.168.56.5/24]
+```
+
+
+### Docker and Zeek
+```bash
+sudo apt update
+sudo apt install -y docker.io
+sudo usermod -aG docker $USER
+docker pull zeek/zeek
+### Wazuh (all-in-one, installation assistant)
+```bash
+curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh && sudo bash ./wazuh-install.sh -a
+```
+- Installed: manager, indexer and dashboard on the same VM (no agent)
 
 ## attacker (Kali)
 - Kali Linux, runs the attack scripts
