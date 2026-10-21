@@ -1,26 +1,59 @@
 # Setup notes
 
 ## Lab overview
-- Host: MacBook Pro 2018, VirtualBox
-- VMs: master, plc (Ubuntu Server 22.04), attacker (Kali), wazuh
-- Every VM: Adapter 1 NAT, Adapter 2 host-only (192.168.56.0/24)
+- Host: MacBook Pro 2018 (Intel), VirtualBox
+- VMs:
+  - master: Ubuntu Server 22.04, OpenPLC Runtime (master)
+  - plc: Ubuntu Server 22.04, OpenPLC Runtime (slave)
+  - wazuh: Ubuntu Server 22.04, Wazuh manager (no agent) + Zeek in Docker
+  - attacker: Kali Linux, attack scripts
+- Every VM: Adapter 1 = NAT (internet), Adapter 2 = host-only (192.168.56.0/24)
+- Host side of the lab network: 192.168.56.1, host-only DHCP server disabled
 
-## master (Ubuntu Server 22.04)
-- RAM 2 GB, 2 CPUs, 20 GB disk
-- Fixed IP on enp0s8: 192.168.56.3
+## master (OpenPLC master)
+- Ubuntu Server 22.04, RAM 2 GB, 2 CPUs, 20 GB disk
+- Lab IP on enp0s8: 192.168.56.3 (static)
 
 ### Commands that worked
-$ sudo apt update
-$ sudo apt install -y openssh-server
-$ sudo systemctl enable --now ssh
-$ sudo apt install -y git curl net-tools tcpdump python3-pip
-$ git clone https://github.com/thiagoralves/OpenPLC_v3.git
-$ cd OpenPLC_v3 && ./install.sh linux
+```bash
+sudo apt update
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
+sudo apt install -y git curl net-tools tcpdump python3-pip
+git clone https://github.com/thiagoralves/OpenPLC_v3.git
+cd OpenPLC_v3
+./install.sh linux
+```
+
+### Network configuration
+/etc/netplan/50-cloud-init.yaml, enp0s8 block:
+```yaml
+enp0s8:
+  dhcp4: false
+  addresses: [192.168.56.3/24]
+```
+Applied with `sudo netplan apply`.
 
 ### Problems and fixes
-- enp0s8 got its address from DHCP, not a static one.
-  Fix: in /etc/netplan/50-cloud-init.yaml set enp0s8 to dhcp4: false
-  with addresses: [192.168.56.3/24], then sudo netplan apply.
+- enp0s8 got its address from DHCP, not a static one. Fixed with the netplan change above.
+- Earlier temporary workaround (not persistent across reboots): `sudo ip link set enp0s8 up` and `sudo dhclient enp0s8`.
 
-## plc
+### Result
+- OpenPLC web interface: http://192.168.56.3:8080
 
+## plc (OpenPLC slave)
+- Ubuntu Server 22.04, RAM 2 GB, 2 CPUs, 20 GB disk
+- Lab IP on enp0s8: 192.168.56.4 (static)
+- Same commands and same netplan change as master, with a different address.
+
+### Result
+- OpenPLC web interface: http://192.168.56.4:8080
+
+## wazuh (Wazuh manager + Zeek in Docker)
+- Ubuntu Server 22.04, RAM 8 GB, 4 CPUs, 50 GB disk
+- Lab IP on enp0s8: 192.168.56.5 (static in netplan)
+- Status: in progress (Mac-to-VM ping not working yet)
+
+## attacker (Kali)
+- Kali Linux, runs the attack scripts
+- Lab IP: to be set on its host-only adapter
