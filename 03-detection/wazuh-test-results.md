@@ -43,12 +43,13 @@ data.id.orig_h: 192.168.56.6
 
 **Also confirmed — fires identically on a legitimate-source write (master, 192.168.56.3), demonstrating the false-positive edge case documented in edge-cases.md:**
 
+```
 rule.id: 100012
 rule.level: 12
 rule.description: Modbus: unauthorized coil write (valve/pump command) - baseline never writes, regardless of source
 data.func: WRITE_SINGLE_COIL
 data.id.orig_h: 192.168.56.3
-
+```
 (Both examples fired twice each: once on REQ, once on RESP — both carry the func field. The rule's source-independence is deliberate; see edge-cases.md for the rationale and tradeoff.)
 
 **Baseline check:** fed baseline_test/modbus.log through the pipeline; grep for rule 100012 returned no matches.
@@ -113,24 +114,19 @@ exception responses).
 
 ---
 
-## Rules 100015 / 100016 — Connection volume / flood
+## Rules 100015 / 100016 — Connection Volume and Flood Detection
 
-**Source log:** conn.log (not modbus.log), fed into pipeline-conn.log.
+**Source log:** `conn.log`, processed through `pipeline-conn.log`.
 
-**100016 fires on:** attack_05b_read_flood_python/conn.log (one
-connection, 22,656 packets — orig_pkts matches the 4+-digit threshold).
+**Rule 100016 fires on:** `attack_05b_read_flood_python/conn.log`. This scenario uses a single TCP connection with more than 22,000 origin packets, exceeding the four-digit packet threshold.
 
-**100016 does NOT fire on:** attack_05a_read_flood_python/conn.log
-(144 separate connections, each with only 1-2 packets — orig_pkts
-never reaches 4 digits on any single connection). This is the
-documented missed-attack-variant style gap for the slow/
-connection-per-request flood; see edge-cases.md for the related,
-confirmed-missed FC3 reconnaissance case.
+**Rule 100016 does not fire on:** `attack_05a_read_flood_python/conn.log`. This scenario generates 144 separate connections, each containing only 1–2 origin packets. The packet count of each individual connection remains below the threshold required by Rule 100016.
 
-**Baseline check:** fed baseline_test/conn.log through the pipeline;
-grep for rules 100015/100016 returned no matches (the master's single
-long-lived connection is explicitly excluded by the non-master-source
-condition on rule 100015).
+However, the short-connection scenario is not completely undetected. Rule 100015 generates alerts for connections from the non-master source `192.168.56.6`. The limitation is that Rule 100015 detects individual connections but does not aggregate their frequency over a defined time window.
+
+**Baseline check:** Feeding `baseline_test/conn.log` through the pipeline produced no alerts for Rules 100015 and 100016. The authorised master's traffic is excluded through the non-master-source condition in Rule 100015, which is the parent rule for Rule 100016.
+
+**Detection gap:** The current rules identify individual non-master connections and high-volume connections, but they do not directly detect an unusually high connection rate by counting connections within a time window. A rate-based correlation rule could improve detection of this pattern, although legitimate reconnects and maintenance activity could also trigger alerts.
 
 ---
 
