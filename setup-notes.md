@@ -166,15 +166,13 @@ sudo grep "<rule-id>" /var/ossec/logs/alerts/alerts.json
 ```bash
 pip install pymodbus
 ```
-- Metasploit (pre-installed on Kali): modules used —
-  auxiliary/scanner/scada/modbusdetect,
-  auxiliary/scanner/scada/modbus_findunitid,
-  auxiliary/scanner/scada/modbus_banner_grabbing,
-  auxiliary/scanner/scada/modbusclient (ACTION=WRITE_COIL,
-  ACTION=WRITE_REGISTER),
-  auxiliary/admin/scada/modicon_command (MODE=STOP)
+- Metasploit (pre-installed on Kali) Modules used:
+  -auxiliary/scanner/scada/modbusdetect,
+  -auxiliary/scanner/scada/modbus_findunitid,
+  -auxiliary/scanner/scada/modbus_banner_grabbing,
+  -auxiliary/scanner/scada/modbusclient (ACTION=WRITE_COIL,ACTION=WRITE_REGISTER),
+  -auxiliary/admin/scada/modicon_command (MODE=STOP)
 - Hand-written Python (raw sockets, no library dependency beyond
   the standard `socket` and `struct` modules) for the remaining
   attacks: coil/register write comparisons, FC8 diagnostics,
   read flood (both variants), and the two edge-case tests.
-```
