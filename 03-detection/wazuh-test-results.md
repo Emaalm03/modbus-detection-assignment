@@ -31,25 +31,27 @@ grep for rule 100011 returned no matches.
 
 ## Rule 100012 — Unauthorized coil write
 
-**Fires on:** attack_02a_valve_write_metasploit (func WRITE_SINGLE_COIL,
-any source).
+**Fires on:** attack_02a_valve_write_metasploit (func WRITE_SINGLE_COIL, any source).
 
-**Confirmed example alert (false-positive test, Oct 28 2026 @ 23:00:21,
-source = master 192.168.56.3 — see edge-cases.md):**
+**Confirmed example alert — real attack (attacker source, 192.168.56.6):**
 
-```
 rule.id: 100012
 rule.level: 12
-rule.description: Modbus: unauthorized coil write (valve/pump command) -
-baseline never writes, regardless of source
+rule.description: Modbus: unauthorized coil write (valve/pump command) - baseline never writes, regardless of source
 data.func: WRITE_SINGLE_COIL
-data.conn_id.orig_h: 192.168.56.3
-```
+data.id.orig_h: 192.168.56.6
 
-(Fired twice: once on REQ, once on RESP — both carry the func field.)
+**Also confirmed — fires identically on a legitimate-source write (master, 192.168.56.3), demonstrating the false-positive edge case documented in edge-cases.md:**
 
-**Baseline check:** fed baseline_test/modbus.log through the pipeline;
-grep for rule 100012 returned no matches.
+rule.id: 100012
+rule.level: 12
+rule.description: Modbus: unauthorized coil write (valve/pump command) - baseline never writes, regardless of source
+data.func: WRITE_SINGLE_COIL
+data.id.orig_h: 192.168.56.3
+
+(Both examples fired twice each: once on REQ, once on RESP — both carry the func field. The rule's source-independence is deliberate; see edge-cases.md for the rationale and tradeoff.)
+
+**Baseline check:** fed baseline_test/modbus.log through the pipeline; grep for rule 100012 returned no matches.
 
 ---
 
