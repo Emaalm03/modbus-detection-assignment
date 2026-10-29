@@ -1,0 +1,49 @@
+<group name="modbus,">
+
+
+  <rule id="100011" level="6">
+    <decoded_as>json</decoded_as>
+    <field name="id.orig_h" negate="yes">192.168.56.3</field>
+    <field name="func">READ_INPUT_REGISTERS|ENCAP_INTERFACE_TRANSPORT</field>
+    <description>Modbus: reconnaissance probe from non-master source</description>
+  </rule>
+
+  <rule id="100012" level="12">
+    <decoded_as>json</decoded_as>
+    <field name="func">WRITE_SINGLE_COIL</field>
+    <description>Modbus: unauthorized coil write (valve/pump command) - baseline never writes, regardless of source</description>
+  </rule>
+
+  <rule id="100013" level="12">
+    <decoded_as>json</decoded_as>
+    <field name="func">WRITE_SINGLE_REGISTER</field>
+    <description>Modbus: unauthorized register write (setpoint manipulation) - baseline never writes, regardless of source</description>
+  </rule>
+
+  <rule id="100014" level="10">
+    <decoded_as>json</decoded_as>
+    <field name="func">PROGRAM_UNITY|DIAGNOSTICS</field>
+    <description>Modbus: reset or diagnostic command attempt - function never used in baseline</description>
+  </rule>
+
+  <rule id="100017" level="9">
+    <decoded_as>json</decoded_as>
+    <field name="func">_EXCEPTION$</field>
+    <description>Modbus: exception response observed (unsupported or malformed request)</description>
+  </rule>
+
+  <rule id="100015" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="id.orig_h" negate="yes">192.168.56.3</field>
+    <field name="orig_pkts" type="pcre2">^\d+$</field>
+    <description>Modbus: connection from a non-master source (conn.log)</description>
+  </rule>
+
+  <rule id="100016" level="13">
+    <if_sid>100015</if_sid>
+    <field name="orig_pkts" type="pcre2">^\d{4,}$</field>
+    <description>Modbus: high-volume connection from non-master source (likely flood)</description>
+  </rule>
+
+</group>
+
